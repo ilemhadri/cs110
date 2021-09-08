@@ -1,0 +1,3 @@
+--memcheck:leak-check=full
+--memcheck:show-reachable=yes
+--suppressions=/usr/class/cs110/tools/config/cs110.supp

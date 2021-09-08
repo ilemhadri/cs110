@@ -1,0 +1,73 @@
+# This file configures the list of assignments (name, duedates, submit rules, etc.)
+# It is not under version control.
+
+[DEFAULT]
+# default settings for all assignments, re-assign in individual section to override default
+checkedited = []
+checkcompile = True
+canpartner = False
+# duedate format is "mm/dd/yyyy hh:mm", hour is military/24-hour
+# time required, cannot leave off
+# if you want "midnight" deadline, use 23:59
+# end of grace period will be duedate + gracehours
+gracehours = 48
+latepolicy = cap
+ontimebonus = 0
+# default for ontime bonus 5% of points earned
+# can increase/decrease per assignment if desired
+# note that any bonus automatically disabled when gracehours is 0
+# that means no need to manually set to 0 unless the intention
+# is to have no ontime bonus for the assignment in any situation
+
+[assign1]
+name = Six Degrees of Separation
+duedate = 4/6/2021 23:59
+archive_files = [imdb.cc, search.cc]
+gracehours = 0
+archivename = search
+
+[assign2]
+name = Reading Unix v6 Filesystems
+duedate = 4/15/2021 23:59
+archive_files = [inode.c, file.c, directory.c, pathname.c]
+archivename = diskimageaccess
+
+[assign3]
+name = All Things Multiprocessing
+canpartner = True
+duedate = 4/27/2021 23:59
+archive_files = [pipeline.c, subprocess.cc, farm.cc]
+archivename = farm
+
+[assign3extra]
+name = Implementing trace
+canpartner = True
+duedate = 06/15/2021 23:59
+archive_files = [trace.cc]
+archivename = trace
+
+[assign4]
+name = Stanford Shell
+canpartner = True
+duedate = 05/06/2021 23:59
+archive_files = [stsh.cc]
+archivename = stsh
+
+[assign5]
+name = RSS News Feed Aggregator
+canpartner = True
+duedate = 5/20/2021 23:59
+archive_files = [news-aggregator.cc, thread-pool.cc]
+archivename = thread-pool
+
+[assign6]
+name = HTTP Web Proxy and Cache
+duedate = 6/03/2021 23:59
+archive_files = [request.cc, request-handler.cc, response.cc]
+archivename = proxy
+
+[assign7]
+name = MapReduce
+duedate = 03/19/2021 23:59
+archive_files = [mrm.cc, mrr.cc, mapreduce-server.cc, mapreduce-worker.cc, mapreduce-mapper.cc, mapreduce-reducer.cc]
+archivename = map-reduce

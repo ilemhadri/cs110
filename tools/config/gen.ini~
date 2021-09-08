@@ -1,0 +1,71 @@
+# The gen.ini file configures the coursewide variables, paths, staff users, etc.
+# It is not under versin control.
+
+[gen]
+
+# Be sure to change these two variables together :-)
+course = CS110
+lowercase = cs110
+title = Principles of Computer Systems
+
+# Identifies current quarter (used as tag for repo creation)
+# Format: yy-q, yy is 2-digit year (use year at beginning of academic year), q is 1-4 for fall, winter, spring, summer
+# E.g. Fall 2016-2017 = 16-1, Spring 2016-2017 = 16-3
+quarter = 20-3
+
+#  Label used at top of web page to identify which class
+quarter_id = Spring 2021
+
+meeting_time = Mo/We 2:30pm-3:20pm PDT #via Zoom (link on <a href="https://canvas.stanford.edu/courses/130026/external_tools/5384">Canvas</a>)
+
+# Instructor sunet id (keep Michael & Julie in list so they have
+# privileges to fix problems if needed)
+instructors = [poohbear, mchang91, zelenski, troccoli, cgregg, rcyrus, rebs]
+
+# Sunet id of TAs
+tas = [ellahofm, sophied, semir, raejoon, demichel, tcr6, mattradz, yigel] #, lex54, adrazen]
+
+# Staff email address
+#staff_email = %(lowercase)s@cs.stanford.edu
+staff_email = cs110@cs.stanford.edu
+
+# URL for discussion forum (populated in navbar)
+forum_url = https://edstem.org/us/join/KAahfy
+
+# The variables below are built on those defined above
+# so may not need any further edits from here down
+
+# Address used as sender when tools are generating emails
+email_sender = %(course)s tools <%(lowercase)s@cs.stanford.edu>
+
+# Path to course dir
+#course_path = /afs/ir/class/%(lowercase)s
+course_path = /afs/ir/class/archive/cs/cs110/cs110.1216
+
+# Path to staff section of course dir
+staff_path = %(course_path)s/staff
+
+# Path to student submission repos
+repo_path  = %(course_path)s/repos
+
+# Top-level web-site
+course_url = https://web.stanford.edu/class/%(lowercase)s
+
+# URL for class cgi-bin
+cgi_url = %(course_url)s/cgi-bin
+
+# Path to master repos
+master_repo_path = %(staff_path)s/master_repos
+
+# Path to directory of stored data/cache/config files
+private_data_path = %(course_path)s/private_data
+
+# Path to directory of mako formatting templates
+template_path = %(private_data_path)s/templates
+
+# Regex to match hostname allowed for grading
+hostname_regex = ^myth|^corn|^rice|binky|MChang
+
+# Path to archive submissions for Moss
+archive_path = /afs/ir/dept/cs_edu/moss/archive/%(course)s
+
