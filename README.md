@@ -15,3 +15,7 @@ and so forth.  That way you'll be interacting with your official repos through t
 
 Thanks, and let me know if you have any questions.
 Jerry
+
+
+#### Resources
+- [C++ Refresher](https://web.stanford.edu/class/archive/cs/cs110/cs110.1212/lectures/errata-c-plus-plus-refresher.html#(1))
