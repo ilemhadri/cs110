@@ -50,21 +50,16 @@ bool imdb::getCredits(const string& player, vector<film>& films) const {
   if (match != 0) return false; 
 
   /* player found */
-  /* pad to ensure string length (including null-terminating characters) is even */
+  /* get movie offsets after padding*/
   int nameLength = strlen(playerFound) + 1;
   if (nameLength%2 == 1) nameLength++;
-
-  /* compute numMovies */
-  short numMovies = (short) *(playerFound + nameLength);
-
-  /* pad to ensure total length is a multiple of 4 */
   int length = nameLength + 2;
   if (length%4 != 0) length += 2;
+  const int * movieOffsets =  (const int *)(playerFound + length);
 
   /* push actor's movies */
-  const int * movieOffsets =  (const int *)(playerFound + length);
+  short numMovies = (short) *(playerFound + nameLength);
   for (int i = 0; i < (int)numMovies; i++){
-      /* const char * filmOffset = (const char *)movieFile + *(movieOffsets + i); */
       film f(movieFile, *(movieOffsets + i));
       films.push_back(f);
   }
@@ -73,7 +68,40 @@ bool imdb::getCredits(const string& player, vector<film>& films) const {
 }
 
 bool imdb::getCast(const film& movie, vector<string>& players) const { 
-  return false; 
+  /* find the movie's offset in movieFile */
+  const int *countp = (const int *) movieFile;
+  const int *begin = (const int *) movieFile + 1;
+  const int *end = begin + *countp;
+  const int *found = lower_bound(begin, end, movie, [this](int offset, const film& movie) {
+          film movieAtOffset(movieFile, offset);
+          return movieAtOffset < movie;
+  });
+
+  /* check that the movie exists in movieFile */
+  film movieFound(movieFile, *found);
+  /* movie not found */
+  if (!(movie == movieFound)) return false; 
+
+  /* movie found */
+  /* get cast offsets after padding */
+  /* include one byte for year */
+  int titleLength = movieFound.title.length() + 2;
+  if (titleLength%2 == 1) titleLength++;
+  /* include two bytes for numActors */
+  int length = titleLength + 2;
+  if (length%4 != 0) length += 2;
+  const int * castOffsets = (const int *)((const char *)movieFile + *found + length);
+
+  /* push film's cast */
+  short numActors = (short) *((const char *)movieFile + *found + titleLength);
+  for (int i = 0; i < (int)numActors; i++){
+      int playerOffset = *(castOffsets + i);
+      const string player = (const char *)actorFile + playerOffset;
+      players.push_back(player);
+  }
+
+  return true;
+
 }
 
 const void *imdb::acquireFileMap(const string& fileName, struct fileInfo& info) {
