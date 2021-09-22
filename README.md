@@ -1,3 +1,5 @@
+![CS110](CS110.png)
+
 Hey there, Ismael,
 
 I just created all of your course repos for the class.  I would rely on the following URL to reach the Autumn Quarter website going forward:
