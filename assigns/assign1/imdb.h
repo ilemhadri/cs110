@@ -69,6 +69,9 @@ class imdb {
 
   bool getCast(const film& movie, std::vector<std::string>& players) const;
 
+  /* Own method */
+  bool compareActorAtOffset(int offset, const std::string& player) const;
+
 /**
  * Destructor: ~imdb
  * -----------------
