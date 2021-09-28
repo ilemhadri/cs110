@@ -6,7 +6,7 @@
 #include "imdb.h"
 using namespace std;
 #include <string.h>
-#include <algorithm> 
+#include <algorithm>
 
 const char *const imdb::kActorFileName = "actordata";
 const char *const imdb::kMovieFileName = "moviedata";
@@ -35,6 +35,9 @@ bool imdb::compareActorAtOffset(int offset, const std::string& player) const {
 
 
 bool imdb::getCredits(const string& player, vector<film>& films) const {
+  /* clear the vector */
+  films.clear();
+
   /* find the player's offset in actorFile */
   const int *countp = (const int *) actorFile;
   const int *begin = (const int *) actorFile + 1;
@@ -68,6 +71,9 @@ bool imdb::getCredits(const string& player, vector<film>& films) const {
 }
 
 bool imdb::getCast(const film& movie, vector<string>& players) const { 
+  /* clear the vector */
+  players.clear();
+
   /* find the movie's offset in movieFile */
   const int *countp = (const int *) movieFile;
   const int *begin = (const int *) movieFile + 1;
@@ -80,7 +86,7 @@ bool imdb::getCast(const film& movie, vector<string>& players) const {
   /* check that the movie exists in movieFile */
   film movieFound(movieFile, *found);
   /* movie not found */
-  if (!(movie == movieFound)) return false; 
+  if (movie != movieFound) return false; 
 
   /* movie found */
   /* get cast offsets after padding */
@@ -93,10 +99,9 @@ bool imdb::getCast(const film& movie, vector<string>& players) const {
   const int * castOffsets = (const int *)((const char *)movieFile + *found + length);
 
   /* push film's cast */
-  short numActors = (short) *((const char *)movieFile + *found + titleLength);
-  for (int i = 0; i < (int)numActors; i++){
-      int playerOffset = *(castOffsets + i);
-      const string player = (const char *)actorFile + playerOffset;
+  short * numActors = (short *)((const char *)movieFile + *found + titleLength);
+  for (short i = 0; i < *numActors; i++){
+      const string player = (const char *)actorFile + *(castOffsets + (int)i);
       players.push_back(player);
   }
 

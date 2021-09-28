@@ -56,12 +56,12 @@ int main(int argc, char *argv[]) {
 
     /* reverse source and target if it improves search efficiency */
     bool reverse = false;
+    films.clear();
     db.getCredits(source, films);
     size_t numSource = films.size();
     db.getCredits(target, films);
     size_t numTarget = films.size();
-    if (numSource > numTarget) reverse = true;
-    if (reverse) {source = argv[2]; target = argv[1];}
+    if (numSource > numTarget) {reverse = true; source = argv[2]; target = argv[1];};
 
     /* declare initial variables */
     set<string> visitedActors = {source};
@@ -72,32 +72,27 @@ int main(int argc, char *argv[]) {
     path foundPath(source);
     bool found = false;
 
-
-
     /* run BFS */
     while (!found and !pathsList.empty()){
         path currPath = pathsList.front();
         pathsList.pop_front();
         string currPlayer = currPath.getLastPlayer();
-
-        /* # found player; break and terminate search */
-        if (currPlayer == target) {found = true; foundPath = currPath; continue;}
+        visitedActors.insert(currPlayer);
 
         /* # path is too long; can't explore it further */
-        if (currPath.getLength() == maxLength) continue;
-        db.getCredits(currPlayer, films);
+        if (currPath.getLength() == maxLength) break;
 
-        for (film& f: films) {
+        db.getCredits(currPlayer, films);
+        for (const film& f: films) {
             /* # already explored this film; skip it */
             auto findMovie = visitedMovies.find(f);
             if (findMovie != visitedMovies.end()) continue;
 
-            /* # never explored this film; */
-            /* # mark and explore */
+            /* # never explored this film; mark and explore it */
             visitedMovies.insert(f);
             db.getCast(f, players);
 
-            for (string& player: players){
+            for (const string& player: players){
                 /* # already explored this player; skip it */
                 auto findActor = visitedActors.find(player);
                 if (findActor != visitedActors.end()) continue;
@@ -109,9 +104,13 @@ int main(int argc, char *argv[]) {
                 if (currPath.getLastPlayer() != currPlayer) currPath.undoConnection();
 
                 currPath.addConnection(f, player);
+                /* # found player; break and terminate search */
+                if (player == target) {found = true; foundPath = currPath; break;}
                 /* # add new path to queue */
                 pathsList.push_back(currPath);
             }
+            if (found) 
+                break;
         }
     }
 
@@ -123,7 +122,7 @@ int main(int argc, char *argv[]) {
   
   /* # no path found */
   else cout << "No path between those two people could be found." << endl;
+  }
 
   return 0;
-  }
 }
