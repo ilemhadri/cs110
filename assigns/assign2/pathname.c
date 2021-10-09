@@ -5,10 +5,32 @@
 #include "diskimg.h"
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 int pathname_lookup(struct unixfilesystem *fs, const char *pathname) {
-  // remove the placeholder implementation and replace with your own
-  fprintf(stderr, "pathname_lookup(path=%s) unimplemented.  Returing -1.\n", pathname);
-  return -1;
+    size_t pathLength = strlen(pathname);
+
+    // deal with "/" pathname
+    if (pathLength == 1) return ROOT_INUMBER;
+    
+    struct direntv6 dirEnt;
+    int curr_inumber = ROOT_INUMBER;
+    char * name;
+
+    // strip leading virgule to make strsep behave
+    char temp[pathLength];
+    char *pathnameWithoutRoot = temp;
+    strcpy(pathnameWithoutRoot, pathname + 1);
+
+    // traverse pathname
+    while ((name = strsep(&pathnameWithoutRoot, "/")) != NULL){
+      if (directory_findname(fs, name, curr_inumber, &dirEnt) == -1){
+	fprintf(stderr, "directory_findname failed in pathname_lookup\n");
+	return -1;
+      }
+      // update inumber
+      curr_inumber = dirEnt.d_inumber;
+    }
+
+    // path traversal complete; return final inumber
+    return curr_inumber; 
 }
