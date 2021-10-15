@@ -66,34 +66,7 @@ int main(int argc, char *argv[]) {
 	  cout << "<no return> \nProgram exited normally with status " <<  WEXITSTATUS(status) << endl;
 	  return WEXITSTATUS(status);
       }
-  
  }
 
   cout << "Not supposed to reach here" << endl;
   return -1;
-
-  /* while (true) { */
-  /*   ptrace(PTRACE_SYSCALL, pid, 0, 0); */
-  /*   waitpid(pid, &status, 0); */
-  /*   if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) { */
-  /*     int num = ptrace(PTRACE_PEEKUSER, pid, ORIG_RAX * sizeof(long)); */
-  /*     cout << "syscall(" << num << ") = " << flush; */
-  /*     break; */
-  /*   } */
-  /* } */
-
-  /* while (true) { */
-  /*   ptrace(PTRACE_SYSCALL, pid, 0, 0); */
-  /*   waitpid(pid, &status, 0); */
-  /*   if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) { */
-  /*     long ret = ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long)); */
-  /*     cout << ret << endl; */
-  /*     break; */
-  /*   } */
-  /* } */
-
-  /* kill(pid, SIGKILL); */
-  /* waitpid(pid, &status, 0); */
-  /* assert(WIFSIGNALED(status)); */
-  /* return 0; */
-}
