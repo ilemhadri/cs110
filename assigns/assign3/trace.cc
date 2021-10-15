@@ -2,18 +2,17 @@
  * File: trace.cc
  * ----------------
  * Presents the implementation of the trace program, which traces the execution of another
- * program and prints out information about ever single system call it makes.  For each system call,
+ * program and prints out information about every single system call it makes.  For each system call,
  * trace prints:
  *
  *    + the name of the system call,
  *    + the values of all of its arguments, and
- *    + the system calls return value
+ *    + the system call return value
  */
 
 #include <cassert>
 #include <iostream>
 #include <map>
-#include <set>
 #include <unistd.h> // for fork, execvp
 #include <string.h> // for memchr, strerror
 #include <sys/ptrace.h>
@@ -47,28 +46,54 @@ int main(int argc, char *argv[]) {
   assert(WIFSTOPPED(status));
   ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
 
-  while (true) {
-    ptrace(PTRACE_SYSCALL, pid, 0, 0);
-    waitpid(pid, &status, 0);
-    if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) {
-      int num = ptrace(PTRACE_PEEKUSER, pid, ORIG_RAX * sizeof(long));
-      cout << "syscall(" << num << ") = " << flush;
-      break;
-    }
-  }
+  while (true){
+      /* # read sys-call enter */
+      ptrace(PTRACE_SYSCALL, pid, 0, 0);
+      waitpid(pid, &status, 0);
 
-  while (true) {
-    ptrace(PTRACE_SYSCALL, pid, 0, 0);
-    waitpid(pid, &status, 0);
-    if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) {
-      long ret = ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long));
-      cout << ret << endl;
-      break;
-    }
-  }
+      if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) {
+	int num = ptrace(PTRACE_PEEKUSER, pid, ORIG_RAX * sizeof(long));
+	cout << "syscall(" << num << ") = " << flush;
+	ptrace(PTRACE_SYSCALL, pid, 0, 0);
+	waitpid(pid, &status, 0);
+	if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) {
+	    long ret = ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long));
+	    cout << ret << endl;
+	}
+      }
 
-  kill(pid, SIGKILL);
-  waitpid(pid, &status, 0);
-  assert(WIFSIGNALED(status));
-  return 0;
+      if (WIFEXITED(status)){
+	  cout << "<no return> \nProgram exited normally with status " <<  WEXITSTATUS(status) << endl;
+	  return WEXITSTATUS(status);
+      }
+  
+ }
+
+  cout << "Not supposed to reach here" << endl;
+  return -1;
+
+  /* while (true) { */
+  /*   ptrace(PTRACE_SYSCALL, pid, 0, 0); */
+  /*   waitpid(pid, &status, 0); */
+  /*   if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) { */
+  /*     int num = ptrace(PTRACE_PEEKUSER, pid, ORIG_RAX * sizeof(long)); */
+  /*     cout << "syscall(" << num << ") = " << flush; */
+  /*     break; */
+  /*   } */
+  /* } */
+
+  /* while (true) { */
+  /*   ptrace(PTRACE_SYSCALL, pid, 0, 0); */
+  /*   waitpid(pid, &status, 0); */
+  /*   if (WIFSTOPPED(status) && (WSTOPSIG(status) == (SIGTRAP | 0x80))) { */
+  /*     long ret = ptrace(PTRACE_PEEKUSER, pid, RAX * sizeof(long)); */
+  /*     cout << ret << endl; */
+  /*     break; */
+  /*   } */
+  /* } */
+
+  /* kill(pid, SIGKILL); */
+  /* waitpid(pid, &status, 0); */
+  /* assert(WIFSIGNALED(status)); */
+  /* return 0; */
 }
