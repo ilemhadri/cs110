@@ -35,15 +35,12 @@ static void spawnAllWorkers(vector<subprocess_t>& workers) {
 
 static const subprocess_t& getAvailableWorker(vector<subprocess_t>& workers) {
   pid_t pid = waitpid(-1, NULL, WUNTRACED);
-
-  static subprocess_t availableWorker = workers[0];
   for (subprocess_t& worker: workers){
     if (worker.pid == pid){
-        availableWorker = worker;
-        break;
+        return worker;
     }
   }
-  return availableWorker;
+  return workers[0];
 }
 
 static void broadcastNumbersToWorkers(vector<subprocess_t>& workers) {
