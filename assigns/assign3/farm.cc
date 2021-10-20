@@ -10,58 +10,92 @@
 #include <sched.h>
 #include "subprocess.h"
 #include "fork-utils.h"  // this has to be the last #include'd statement in the file
-
 using namespace std;
 
-struct worker {
-  worker() {}
-  worker(char *argv[]) : sp(subprocess(argv, true, false)), available(false) {}
-  subprocess_t sp;
-  bool available;
-};
-
 static const size_t kNumCPUs = sysconf(_SC_NPROCESSORS_ONLN);
-// restore static keyword once you start using these, commented out to suppress compiler warning
-/* static */ vector<worker> workers(kNumCPUs);
-/* static */ size_t numWorkersAvailable = 0;
 
-static void markWorkersAsAvailable(int sig) {}
+static const char *kWorkerArguments[] = {"./factor.py", "--self-halting", NULL};
 
-// restore static keyword once you start using it, commented out to suppress compiler warning
-/* static */ const char *kWorkerArguments[] = {"./factor.py", "--self-halting", NULL};
-static void spawnAllWorkers() {
+static void spawnAllWorkers(vector<subprocess_t>& workers) {
   cout << "There are this many CPUs: " << kNumCPUs << ", numbered 0 through " << kNumCPUs - 1 << "." << endl;
   for (size_t i = 0; i < kNumCPUs; i++) {
-    // cout << "Worker " << workers[i].sp.pid << " is set to run on CPU " << i << "." << endl;
+    // launch worker
+    subprocess_t currProcess = subprocess(kWorkerArguments, true, false);
+    workers.push_back(currProcess);
+
+    // link CPU to worker
+    cpu_set_t cpuSet;
+    CPU_ZERO(&cpuSet);
+    CPU_SET(i, &cpuSet);
+    sched_setaffinity(currProcess.pid, 1, &cpuSet);
+
+    cout << "Worker " << workers[i].pid << " is set to run on CPU " << i << "." << endl;
   }
 }
 
-// restore static keyword once you start using it, commented out to suppress compiler warning
-/* static */ size_t getAvailableWorker() {
-  return 0;
+static const subprocess_t& getAvailableWorker(vector<subprocess_t>& workers) {
+  pid_t pid = waitpid(-1, NULL, WUNTRACED);
+
+  /* find worker with matching pid */
+  /* loop over indices */
+  size_t index = 0;
+  for (size_t i = 0; i < kNumCPUs; i++){
+    if (workers[i].pid == pid){
+      index = i;
+      break;
+    }
+  }
+  return workers[index];
+
+  /* alternative version */
+  /* does not work */
+  /* mysterious */
+  /* subprocess_t& availableWorker = workers[0]; */
+  /* for (subprocess_t& worker: workers){ */
+  /*   if (worker.pid == pid){ */
+  /*       availableWorker = worker; */
+  /*       break; */
+  /*   } */
+  /* } */
+  /* return availableWorker; */
 }
 
-static void broadcastNumbersToWorkers() {
+static void broadcastNumbersToWorkers(vector<subprocess_t>& workers) {
   while (true) {
     string line;
     getline(cin, line);
     if (cin.fail()) break;
     size_t endpos;
-    /* long long num = */ stoll(line, &endpos);
+    long long num = stoll(line, &endpos);
     if (endpos != line.size()) break;
-    // you shouldn't need all that many lines of additional code
+    // get available worker
+    const subprocess_t currWorker = getAvailableWorker(workers);
+    // send num to currWorker
+    dprintf(currWorker.supplyfd, "%lld\n", num); 
+    // continue the subprocess
+    kill(currWorker.pid, SIGCONT);
   }
 }
 
-static void waitForAllWorkers() {}
+static void waitForAllWorkers(vector<subprocess_t>& workers) {
+  for (auto& worker: workers){
+    waitpid(worker.pid, NULL, WUNTRACED);
+  }
+}
 
-static void closeAllWorkers() {}
+static void closeAllWorkers(vector<subprocess_t>& workers) {
+  for (auto& worker: workers){
+    close(worker.supplyfd);
+    kill(worker.pid, SIGCONT);
+    waitpid(worker.pid, NULL, 0);
+  }
+}
 
 int main(int argc, char *argv[]) {
-  signal(SIGCHLD, markWorkersAsAvailable);
-  spawnAllWorkers();
-  broadcastNumbersToWorkers();
-  waitForAllWorkers();
-  closeAllWorkers();
+  vector<subprocess_t> workers;
+  spawnAllWorkers(workers);
+  broadcastNumbersToWorkers(workers);
+  waitForAllWorkers(workers);
+  closeAllWorkers(workers);
   return 0;
 }
