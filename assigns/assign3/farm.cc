@@ -36,28 +36,14 @@ static void spawnAllWorkers(vector<subprocess_t>& workers) {
 static const subprocess_t& getAvailableWorker(vector<subprocess_t>& workers) {
   pid_t pid = waitpid(-1, NULL, WUNTRACED);
 
-  /* find worker with matching pid */
-  /* loop over indices */
-  size_t index = 0;
-  for (size_t i = 0; i < kNumCPUs; i++){
-    if (workers[i].pid == pid){
-      index = i;
-      break;
+  static subprocess_t availableWorker = workers[0];
+  for (subprocess_t& worker: workers){
+    if (worker.pid == pid){
+        availableWorker = worker;
+        break;
     }
   }
-  return workers[index];
-
-  /* alternative version */
-  /* does not work */
-  /* mysterious */
-  /* subprocess_t& availableWorker = workers[0]; */
-  /* for (subprocess_t& worker: workers){ */
-  /*   if (worker.pid == pid){ */
-  /*       availableWorker = worker; */
-  /*       break; */
-  /*   } */
-  /* } */
-  /* return availableWorker; */
+  return availableWorker;
 }
 
 static void broadcastNumbersToWorkers(vector<subprocess_t>& workers) {
