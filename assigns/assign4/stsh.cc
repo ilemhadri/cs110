@@ -114,7 +114,7 @@ size_t STSHShell::checkforArguments(std::string command, const char *const argum
   if ((command == "fg") || (command =="bg")) num = 1;
   else num = 2;
   //Check if the number of arguments is correct for the command
-  if (arguments[num] != NULL) throw STSHException("Incorrect number of arguments to the command!"); 
+  if ((arguments[num] != NULL) || (arguments[0] == NULL)) throw STSHException("Incorrect number of arguments to the command!"); 
 
   //Use parseNumber to obtain the arguments
   std::vector<size_t> myParsedArgs;
@@ -126,13 +126,11 @@ size_t STSHShell::checkforArguments(std::string command, const char *const argum
 
   //Handle and return the jobNumber incase of fg and bg
   if ((command == "fg") || (command =="bg")){
-    assert(myParsedArgs.size()==1);
     if (!joblist.containsJob(myParsedArgs[0])) throw STSHException("Invalid job number!");
     //Return the job number to the fg and bg functions
     argsToReturn = myParsedArgs[0];
   }
   else{
-    assert(myParsedArgs.size()<=2);
     if(myParsedArgs.size()==1){
       //If there is only one argument it will always be the pid and this should be returned to slay, halt and cont
       if(!joblist.containsProcess(myParsedArgs[0])) throw ("Invalid pid!");
