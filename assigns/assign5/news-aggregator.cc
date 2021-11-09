@@ -43,27 +43,27 @@ NewsAggregator *NewsAggregator::createNewsAggregator(int argc, char *argv[]) {
     {"url", required_argument, NULL, 'u'},
     {NULL, 0, NULL, 0},
   };
-  
+
   string rssFeedListURI = kDefaultRSSFeedListURL;
   bool verbose = true;
   while (true) {
     int ch = getopt_long(argc, argv, "vqu:", options, NULL);
     if (ch == -1) break;
     switch (ch) {
-    case 'v':
-      verbose = true;
-      break;
-    case 'q':
-      verbose = false;
-      break;
-    case 'u':
-      rssFeedListURI = optarg;
-      break;
-    default:
-      NewsAggregatorLog::printUsage("Unrecognized flag.", argv[0]);
+      case 'v':
+        verbose = true;
+        break;
+      case 'q':
+        verbose = false;
+        break;
+      case 'u':
+        rssFeedListURI = optarg;
+        break;
+      default:
+        NewsAggregatorLog::printUsage("Unrecognized flag.", argv[0]);
     }
   }
-  
+
   argc -= optind;
   if (argc > 0) NewsAggregatorLog::printUsage("Too many arguments.", argv[0]);
   return new NewsAggregator(rssFeedListURI, verbose);
@@ -72,7 +72,7 @@ NewsAggregator *NewsAggregator::createNewsAggregator(int argc, char *argv[]) {
 /**
  * Method: buildIndex
  * ------------------
- * Initalizex the XML parser, processes all feeds, and then
+ * Initalize the XML parser, processes all feeds, and then
  * cleans up the parser.  The lion's share of the work is passed
  * on to processAllFeeds, which you will need to implement.
  */
@@ -106,7 +106,7 @@ void NewsAggregator::queryIndex() const {
       cout << "Ah, we didn't find the term \"" << response << "\". Try again." << endl;
     } else {
       cout << "That term appears in " << matches.size() << " article"
-           << (matches.size() == 1 ? "" : "s") << ".  ";
+        << (matches.size() == 1 ? "" : "s") << ".  ";
       if (matches.size() > kMaxMatchesToShow)
         cout << "Here are the top " << kMaxMatchesToShow << " of them:" << endl;
       else if (matches.size() > 1)
@@ -123,7 +123,7 @@ void NewsAggregator::queryIndex() const {
         if (shouldTruncate(url)) url = truncate(url);
         string times = match.second == 1 ? "time" : "times";
         cout << "  " << setw(2) << setfill(' ') << count << ".) "
-             << "\"" << title << "\" [appears " << match.second << " " << times << "]." << endl;
+          << "\"" << title << "\" [appears " << match.second << " " << times << "]." << endl;
         cout << "       \"" << url << "\"" << endl;
       }
     }
@@ -135,10 +135,20 @@ void NewsAggregator::queryIndex() const {
  * -----------------------------------
  * Self-explanatory.
  */
-static const size_t kNumFeedWorkers = 8;
-static const size_t kNumArticleWorkers = 64;
+static const size_t kNumFeedWorkers = 10;
+static const size_t kNumArticleWorkers = 50;
 NewsAggregator::NewsAggregator(const string& rssFeedListURI, bool verbose): 
   log(verbose), rssFeedListURI(rssFeedListURI), built(false), feedPool(kNumFeedWorkers), articlePool(kNumArticleWorkers) {}
+
+  bool downloadArticle(const string& articleUrl, std::set<std::string>& urlSet, mutex& urlSetLock) {
+    lock_guard urlSetLg(urlSetLock); // ADDED THIS
+    // existing URL; skip
+    if (urlSet.count(articleUrl)) return false;
+    // new URL; process
+    urlSet.insert(articleUrl);
+    return true;
+  }
+
 
 /**
  * Private Method: processAllFeeds
@@ -148,11 +158,10 @@ NewsAggregator::NewsAggregator(const string& rssFeedListURI, bool verbose):
  * of RSSFeeds, each of which can be used to fetch the series of articles in that feed.
  *
  * You'll want to erase much of the code below and ultimately replace it with
- * your multithreaded aggregator.
+ * your multithreaded aggregator.  It's only being presented to make the APIs of
+ * all of the support classes as clear as possible.
  */
 void NewsAggregator::processAllFeeds() {
-/*
-  cout << "Parsing feed list RSS file at \"" << rssFeedListURI << "\"...." << endl;
   RSSFeedList feedList(rssFeedListURI);
   try {
     feedList.parse();
@@ -162,44 +171,62 @@ void NewsAggregator::processAllFeeds() {
 
   const map<string, string>& feeds = feedList.getFeeds();
   if (feeds.empty()) {
-    cout << "Feed list is technically well-formed, but it's empty!" << endl;
     return;
   }
 
-  const pair<string, string>& firstFeed = *feeds.cbegin();
-  const string& feedUrl = firstFeed.first;
-  const string& feedTitle = firstFeed.second;
+  for (map<string, string>::const_iterator myFeed = feeds.begin(); myFeed != feeds.end(); myFeed++){
+    const string& feedUrl = myFeed->first;
+    feedPool.schedule([this, &feedUrl]() {
+        RSSFeed feed(feedUrl);
+        try {
+        feed.parse();
+        } catch (const RSSFeedException& rfe) {
+        log.noteSingleFeedDownloadFailure(feedUrl);
+        return;
+        }
 
-  cout << "Parsing feed named \"" << feedTitle << "\"..." << endl;
-  RSSFeed feed(feedUrl);
-  try {
-    feed.parse();
-  } catch (const RSSFeedException& rfe) {
-    log.noteSingleFeedDownloadFailure(feedUrl);
-    return;
+        const vector<Article>& articles = feed.getArticles();
+        if (articles.empty()) {
+        return;
+        }
+
+        for (auto& article: articles){
+        articlePool.schedule([this, article]() {
+            const string& articleTitle = article.title;
+            const string& articleUrl = article.url;
+            bool articleDownloaded = downloadArticle(articleUrl, urlSet, urlSetLock);
+            if (!articleDownloaded) return;
+            HTMLDocument document(articleUrl);
+            try {
+            document.parse();
+            } catch (const HTMLDocumentException& hde) {
+            log.noteSingleArticleDownloadFailure(article);
+            return;
+            }
+            const string& subdomain = getURLServer(article.url);
+            pair<const string, const string> keyPair = make_pair(subdomain, articleTitle);
+            vector<string> tokens = document.getTokens();
+            sort(tokens.begin(), tokens.end());
+
+            lock_guard articleMaplg(articleMapLock);
+            if (articleMap.count(keyPair) == 0){
+            // keyPair does not exist; add it
+            articleMap[keyPair] = make_pair(article, tokens);
+            }
+            else {
+              // keyPair already exists; keep first article and intersect tokens
+              Article smallestArticle = min(articleMap.at(keyPair).first, article);
+              const vector<string>& existingTokens = articleMap.at(keyPair).second;
+              vector<string> intersectionTokens;
+              set_intersection(existingTokens.cbegin(), existingTokens.cend(), tokens.cbegin(), tokens.cend(), back_inserter(intersectionTokens));
+              articleMap[keyPair] = make_pair(smallestArticle, intersectionTokens);
+            }
+        });
+        }
+    });
   }
-
-  const vector<Article>& articles = feed.getArticles();
-  if (articles.empty()) {
-    cout << "Feed is technically well-formed, but it's empty!" << endl;
-    return;
-  }
-
-  const Article& firstArticle = articles[0];
-  const string& articleTitle = firstArticle.title;
-  const string& articleUrl = firstArticle.url;
-  HTMLDocument document(articleUrl);
-
-  cout << "Parsing article with title \"" << articleTitle << "\"..." << endl;
-  try {
-    document.parse();
-  } catch (const HTMLDocumentException& hde) {
-    log.noteSingleArticleDownloadFailure(firstArticle);
-    return;
-  }
-
-  const vector<string>& tokens = document.getTokens();
-  size_t count = tokens.size();
-  cout << "The first article of the first feed list contains this many tokens: " << count << endl;
-  */
+  feedPool.wait();
+  articlePool.wait();
+  // add (smallestArticle,tokenIntersection) to index
+  for (const auto & [keyPair, valuePair] : articleMap) index.add(valuePair.first, valuePair.second);
 }

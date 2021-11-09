@@ -14,6 +14,7 @@
 #include <set>
 #include <mutex>
 #include <memory>
+#include <utility> // for std::pair
 
 #include "log.h"
 #include "rss-index.h"
@@ -21,6 +22,7 @@
 #include "article.h"
 #include "thread-pool-release.h"
 #include "thread-pool.h"
+#include "rss-feed.h"
 
 namespace tp = release;
 using tp::ThreadPool;
@@ -75,7 +77,18 @@ class NewsAggregator {
   bool built = false;
   ThreadPool feedPool;
   ThreadPool articlePool;
+  static const size_t kMagicThreadingNumber = 51122153;
+
+  /* added this for Milestone 1*/  
+  std::map<std::pair<const server, const title>, std::pair<Article, std::vector<std::string>>> articleMap;
+  std::set<std::string> urlSet;
   
+  /* added this for Milestone 2 */
+  std::mutex urlSetLock;
+  std::mutex articleMapLock;
+  /* std::vector<Article> articleVector; */
+  /* std::mutex articleVectorLock; */
+
 /**
  * Constructor: NewsAggregator
  * ---------------------------

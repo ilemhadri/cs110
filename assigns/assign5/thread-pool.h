@@ -14,7 +14,14 @@
 
 #include <cstdlib>
 #include <functional>
+
 // place additional #include statements here
+#include <vector>
+#include <queue>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
+#include <semaphore.h>
 
 namespace develop {
 
@@ -47,9 +54,36 @@ class ThreadPool {
   void wait();
 
  private:
-  
   ThreadPool(const ThreadPool& original) = delete;
   ThreadPool& operator=(const ThreadPool& rhs) = delete;
+
+  // added this for Milestone 3
+  std::mutex queueLock; // protects thunkQueue 
+  std::vector<std::mutex> thunkLock; // protects currentThunks
+  std::mutex availableWorkerLock; // use this to get the available worker id
+  std::mutex waitMutex;
+
+  std::condition_variable_any nonEmptyQueue; //use this to notify workers that there is work to do
+  std::condition_variable_any waitCv;
+
+  semaphore workerPermits;
+  std::vector<semaphore> workerSemaphore;
+
+  std::thread dt;
+  std::vector<std::thread> wts;
+
+  size_t waitCounter;
+  int destruct;
+  std::vector<int> availableWorker;
+
+  std::queue<std::function<void(void)>> thunkQueue;
+  std::vector<std::function<void(void)>> currentThunks;
+
+  size_t getAvailableWorker();
+  void dispatcher();
+  void worker(size_t workerID);
+  void assignTaskToWorker(size_t workerID);
+  void waitSignal();
 };
 
 #endif
