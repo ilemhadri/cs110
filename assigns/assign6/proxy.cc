@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include "proxy-options.h"
 #include "proxy-exception.h"
+#include "ostreamlock.h"
 using namespace std;
 
 /** Public constructor and methods **/
@@ -33,7 +34,7 @@ using namespace std;
  * is thrown.
  */
 static const int kUnitializedSocket = -1;
-HTTPProxy::HTTPProxy(int argc, char *argv[]) throw (HTTPProxyException) :
+HTTPProxy::HTTPProxy(int argc, char *argv[]):
   portNumber(computeDefaultPortForUser()), usingProxy(false),
   usingSpecificProxyPortNumber(false), proxyPortNumber(computeDefaultPortForUser()), 
   listenfd(kUnitializedSocket) {
@@ -50,40 +51,48 @@ HTTPProxy::HTTPProxy(int argc, char *argv[]) throw (HTTPProxyException) :
 }
 
 /**
- * Method: acceptAndProxyRequest
- * -----------------------------
- * General umbrella method that blocks until a request
- * is detected.  When a request is detected, the IP address
- * of the requesting host is extracted, and the request is
- * proxied on to the origin server.
+ * Method: runServer
+ * -----------------
+ * General umbrella method that blocks until a request is detected.  When a
+ * request is detected, the IP address of the requesting host is extracted, and
+ * the request is proxied on to the origin server.
  */
-void HTTPProxy::acceptAndProxyRequest() throw (HTTPProxyException) {
-  struct sockaddr_in clientAddr;
-  socklen_t clientAddrSize = sizeof(clientAddr);
-  bzero(&clientAddr, clientAddrSize);
-  int connectionfd = accept(listenfd, (struct sockaddr *) &clientAddr, &clientAddrSize);
-  if (connectionfd < 0) {
-    // connectionfd isn't open, so we're not orphaning any resources
-    throw HTTPProxyException
-      ("Call to accept failed to return a valid client socket.");
+void HTTPProxy::runServer() {
+  while (true) {
+    struct sockaddr_in clientAddr;
+    socklen_t clientAddrSize = sizeof(clientAddr);
+    memset(&clientAddr, 0, clientAddrSize);
+    int connectionfd = accept(listenfd, (struct sockaddr *) &clientAddr, &clientAddrSize);
+    if (!isRunning) return;
+    if (connectionfd < 0) {
+      // connectionfd isn't open, so we're not orphaning any resources
+      throw HTTPProxyException
+        ("Call to accept failed to return a valid client socket.");
+    }
+    
+    char buffer[INET_ADDRSTRLEN];
+    const char *clientIPAddress = inet_ntop(AF_INET, &clientAddr.sin_addr, buffer, sizeof(buffer));
+    if (clientIPAddress == NULL) throw HTTPProxyException("Failed to extract an IP address from the client connection.");
+    try {
+      scheduler.scheduleRequest(connectionfd, clientIPAddress);
+    } catch (...) {
+      cerr << "General failure while in communication with " << clientIPAddress << "." << endl;
+      cerr << "But it's just one connection, so we're ignoring..." << endl;
+    }
   }
-  
-  char buffer[INET_ADDRSTRLEN];
-  const char *clientIPAddress = inet_ntop(AF_INET, &clientAddr.sin_addr, buffer, sizeof(buffer));
-  if (clientIPAddress == NULL) throw HTTPProxyException("Failed to extract an IP address from the client connection.");
-  try {
-    scheduler.scheduleRequest(connectionfd, clientIPAddress);
-  } catch (...) {
-    cerr << "General failure while in communication with " << clientIPAddress << "." << endl;
-    cerr << "But it's just one connection, so we're ignoring..." << endl;
-  }
+}
+
+void HTTPProxy::stopServer() {
+  cout << oslock << endl << "Shutting down proxy." << endl << osunlock;
+  isRunning = false;
+  shutdown(listenfd, SHUT_RDWR);
 }
 
 /** Private methods **/
 
 static const string kUsageString = 
    "Usage: proxy [--port <port-number>] [--proxy-server <proxy-server> [--proxy-port <port-number>]] [--clear-cache] [--max-age <max-cache-time>]";
-void HTTPProxy::configureFromArgumentList(int argc, char *argv[]) throw (HTTPProxyException) {
+void HTTPProxy::configureFromArgumentList(int argc, char *argv[]) {
   struct option options[] = {
     {"port", required_argument, NULL, 'p'},
     {"proxy-port", required_argument, NULL, 'r'},
@@ -173,7 +182,7 @@ void HTTPProxy::createServerSocket() {
  */
 void HTTPProxy::configureServerSocket() const {
   struct sockaddr_in serverAddr;
-  bzero(&serverAddr, sizeof(serverAddr));
+  memset(&serverAddr, 0, sizeof(serverAddr));
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
   serverAddr.sin_port = htons(portNumber);

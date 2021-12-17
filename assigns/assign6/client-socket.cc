@@ -14,10 +14,13 @@
 #include <cstring>                // for memset
 using namespace std;
 
+const size_t kDnsResultBufferSize = 1 << 16; // make it huge
+
 int createClientSocket(const string& host, unsigned short port) {
   int error;
-  char buffer[1 << 16]; // make it huge
-  struct hostent entry, *he;
+  char buffer[kDnsResultBufferSize];
+  struct hostent entry;
+  struct hostent *he;
   gethostbyname_r(host.c_str(), &entry, buffer, sizeof(buffer), &he, &error);
   if (he == NULL) return kClientSocketError;
   

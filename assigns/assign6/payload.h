@@ -43,8 +43,8 @@ class HTTPPayload {
   bool isChunkedPayload(const HTTPHeader& header) const;
   void ingestChunkedPayload(std::istream& instream);
   void ingestCompletePayload(std::istream& instream, size_t contentLength);
-  void appendData(const std::string& content);
-  void appendData(const std::vector<char>& content);
+  void appendData(const std::string& data);
+  void appendData(const std::vector<char>& data);
 };
 
 #endif

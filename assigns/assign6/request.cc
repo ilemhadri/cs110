@@ -7,13 +7,14 @@
 
 #include <sstream>
 #include "request.h"
+#include "header.h"
 #include "string-utils.h"
 using namespace std;
 
 static const string kWhiteSpaceDelimiters = " \r\n\t";
 static const string kProtocolPrefix = "http://";
 static const unsigned short kDefaultPort = 80;
-void HTTPRequest::ingestRequestLine(istream& instream) throw (HTTPBadRequestException) {
+void HTTPRequest::ingestRequestLine(istream& instream) {
   getline(instream, requestLine);
   if (instream.fail()) {
     throw HTTPBadRequestException("First line of request could not be read.");
@@ -44,6 +45,15 @@ void HTTPRequest::ingestRequestLine(istream& instream) throw (HTTPBadRequestExce
 
 void HTTPRequest::ingestHeader(istream& instream, const string& clientIPAddress) {
   requestHeader.ingestHeader(instream);
+  /* add x-forwarded headers */
+  requestHeader.addHeader("x-forwarded-proto", "http");
+  const string xforString = requestHeader.getValueAsString("x-forwarded-for");
+  if (xforString.empty()) {
+    requestHeader.addHeader("x-forwarded-for", clientIPAddress);
+  } else {
+    const string concatIPAddresses = xforString + ", " + clientIPAddress;
+    requestHeader.addHeader("x-forwarded-for", concatIPAddresses);
+  }
 }
 
 bool HTTPRequest::containsName(const string& name) const {

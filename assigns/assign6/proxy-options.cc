@@ -47,7 +47,7 @@ unsigned short computeDefaultPortForUser() {
  * too big or too small to every work), then an HTTPProxyException
  * is thrown.
  */
-unsigned short extractPortNumber(const char *portArgument, const char *flags) throw (HTTPProxyException) {
+unsigned short extractPortNumber(const char *portArgument, const char *flags) {
   if (portArgument == NULL) {
     ostringstream oss;
     oss << "An actual port number must be supplied with the " << flags << " flag.";
@@ -71,7 +71,7 @@ unsigned short extractPortNumber(const char *portArgument, const char *flags) th
   return rawPort;
 }
 
-string extractProxyServer(const char *proxyArgument) throw (HTTPProxyException) {
+string extractProxyServer(const char *proxyArgument) {
   if (proxyArgument == NULL || string(proxyArgument).empty()) {
     ostringstream oss;
     oss << "An actual hostname must be supplied with the --proxy-server/-s flag.";
@@ -81,7 +81,7 @@ string extractProxyServer(const char *proxyArgument) throw (HTTPProxyException) 
   return proxyArgument;
 }
 
-long extractLongInRange(const char *str, long min, long max, const char *flags) throw (HTTPProxyException) {
+long extractLongInRange(const char *str, long min, long max, const char *flags) {
   if (str == NULL) {
     ostringstream oss;
     oss << "An integer string must accompany the " << flags << " flag.";

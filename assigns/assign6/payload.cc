@@ -43,14 +43,15 @@ bool HTTPPayload::isChunkedPayload(const HTTPHeader& header) const {
   return header.getValueAsString("Transfer-Encoding") == "chunked";
 }
 
+const size_t kHexBase = 16;
 void HTTPPayload::ingestChunkedPayload(istream& instream) {
   while (true) {
     string chunkSizeStr;
     getline(instream, chunkSizeStr);
     chunkSizeStr = trim(chunkSizeStr);
     appendData(chunkSizeStr + "\r\n");
-    chunkSizeStr = "0x" + chunkSizeStr;
-    int chunkSize = strtol(chunkSizeStr.c_str(), NULL, 16);
+    chunkSizeStr.insert(0, "0x");
+    unsigned long chunkSize = strtoul(chunkSizeStr.c_str(), NULL, kHexBase);
     vector<char> content(chunkSize + 2); // read \r\n, even when chunk size is 0
     instream.read(&*content.begin(), chunkSize + 2);
     if (chunkSize == 0) break;

@@ -72,7 +72,7 @@ long HTTPHeader::getValueAsNumber(const string& name) const {
 }
 
 std::ostream& operator<<(std::ostream& os, const HTTPHeader& hh) {
-  for (const pair<string, string>& p: hh.headers) {
+  for (const pair<const string, string>& p: hh.headers) {
     os << p.first << ": " << p.second << "\r\n";
   }
 

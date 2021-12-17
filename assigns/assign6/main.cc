@@ -6,7 +6,7 @@
  */
 
 #include <iostream> // for cerr
-#include <csignal>  // for sigaction, SIG_IGN
+#include <csignal>  // for sigprocmask, sigwait
 
 #include "proxy.h"
 #include "proxy-exception.h"
@@ -21,49 +21,44 @@ using namespace std;
  * some pipe is broken.  We actually just print a short message but
  * otherwise allow execution to continue.
  */
-static void alertOfBrokenPipe(int unused) {
-  cerr << oslock << "Client closed socket.... aborting response." 
+static void alertOfBrokenPipe() {
+  cerr << oslock << "Client closed socket.... aborting response."
        << endl << osunlock;
 }
 
-/**
- * Function: killProxyServer
- * -------------------------
- * Simple fault handler that ends the program.
- */
-static void killProxyServer(int unused) {
-  cout << endl << "Shutting down proxy." << endl;
-  exit(0);
+static sigset_t getSignals() {
+  sigset_t signals;
+  sigemptyset(&signals);
+  sigaddset(&signals, SIGINT);
+  sigaddset(&signals, SIGTSTP);
+  sigaddset(&signals, SIGPIPE);
+  return signals;
+}
+
+static void blockSignals() {
+  sigset_t signals = getSignals();
+  sigprocmask(SIG_BLOCK, &signals, NULL);
 }
 
 /**
- * Function: handleBrokenPipes
- * ---------------------------
- * Configures the entire system to trivially handle all broken
- * pipes.  The alternative is to let a single broken pipe bring
- * down the entire proxy.
+ * Function: handleSignals
+ * -----------------------
+ * Configures the entire system to quit on ctrl-c and ctrl-z, and to handle
+ * broken pipes
  */
-static void handleBrokenPipes() {
-  struct sigaction act;
-  act.sa_handler = alertOfBrokenPipe;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-  sigaction(SIGPIPE, &act, NULL);
-}
-
-/**
- * Function: handleKillRequests
- * ----------------------------
- * Configures the entire system to quit on 
- * ctrl-c and ctrl-z.
- */
-static void handleKillRequests() {
-  struct sigaction act;
-  act.sa_handler = killProxyServer;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-  sigaction(SIGINT, &act, NULL);
-  sigaction(SIGTSTP, &act, NULL);
+static void handleSignals(function<void()> shutdownServer) {
+  thread([=]{
+    sigset_t signals = getSignals();
+    while (true) {
+      int received;
+      sigwait(&signals, &received);
+      if (received == SIGINT || received == SIGTSTP) {
+        shutdownServer();
+      } else if (received == SIGPIPE) {
+        alertOfBrokenPipe();
+      }
+    }
+  }).detach();
 }
 
 /**
@@ -75,23 +70,23 @@ static void handleKillRequests() {
  */
 static const int kFatalHTTPProxyError = 1;
 int main(int argc, char *argv[]) {
-  handleKillRequests();
-  handleBrokenPipes();
+  blockSignals();
+  HTTPProxy proxy(argc, argv);
+  handleSignals([&proxy]{
+    proxy.stopServer();
+  });
   try {
-    HTTPProxy proxy(argc, argv);
     cout << "Listening for all incoming traffic on port " << proxy.getPortNumber() << "." << endl;
     if (proxy.isUsingProxy()) {
       cout << "Requests will be directed toward another proxy at " 
            << proxy.getProxyServer() << ":" << proxy.getProxyPortNumber() << "." << endl;
     }
-    while (true) {
-      proxy.acceptAndProxyRequest();
-    }
+    proxy.runServer();
   } catch (const HTTPProxyException& hpe) {
     cerr << "Fatal Error: " << hpe.what() << endl;
     cerr << "Exiting..... " << endl;
     return kFatalHTTPProxyError;
   }
   
-  return 0; // never gets here, but it feels wrong to not type it
+  return 0;
 }

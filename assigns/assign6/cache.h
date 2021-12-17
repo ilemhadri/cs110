@@ -43,13 +43,17 @@ class HTTPCache {
  * a cacheable item is allowed to remain in the cache from the time it was placed there.
  */
   void setMaxAge(long maxAge) { this->maxAge = maxAge; }
+
+  // added this for Milestone 3
+  // Returns reference to mutex to lock
+  std::mutex& findMutexFromHash(const HTTPRequest& request);
   
  private:
   std::string getCacheDirectory() const;
   size_t hashRequest(const HTTPRequest& request) const;
   std::string hashRequestAsString(const HTTPRequest& request) const;
   std::string serializeRequest(const HTTPRequest& request) const;
-  bool cacheEntryExists(const std::string& filename) const;
+  bool cacheEntryExists(const std::string& requestHash) const;
   std::string getRequestHashCacheEntryName(const std::string& requestHash) const;
   void ensureDirectoryExists(const std::string& directory, bool empty = false) const;
   std::string getCurrentTime() const;
@@ -61,6 +65,10 @@ class HTTPCache {
 
   long maxAge;
   std::string cacheDirectory;
+
+  // added this for Milestone 3
+  static const size_t kNumMutex = 997;
+  std::mutex cacheMutexArray[kNumMutex];
 };
 
 #endif

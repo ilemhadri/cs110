@@ -65,7 +65,7 @@ void HTTPCache::clear() {
 bool HTTPCache::shouldCache(const HTTPRequest& request, const HTTPResponse& response) const {
   return maxAge != 0 &&
     request.getMethod() == "GET" && 
-    response.getResponseCode() == 200 && 
+    response.getResponseCode() == HTTPStatus::OK && 
     response.permitsCaching();
 }
 
@@ -158,11 +158,13 @@ bool HTTPCache::cacheEntryExists(const string& requestHash) const {
 
   bool exists = false;
   while (!exists) {
-    struct dirent entry, *result;
-    if (readdir_r(dir, &entry, &result) != 0)
+    errno = 0;
+    struct dirent *entry = readdir(dir);
+    if (errno != 0) {
       throw HTTPCacheAccessException("Failed to surface one of the cache directory entries.");
-    if (result == NULL) break;
-    string dirEntry = entry.d_name;
+    }
+    if (entry == NULL) break;
+    string dirEntry = entry->d_name;
     exists = dirEntry != "." && dirEntry != "..";
   }
 
@@ -178,11 +180,13 @@ string HTTPCache::getRequestHashCacheEntryName(const string& requestHash) const 
 
   string cachedEntryName;
   while (true) {
-    struct dirent entry, *result;
-    if (readdir_r(dir, &entry, &result) != 0)
+    errno = 0;
+    struct dirent *entry = readdir(dir);
+    if (errno != 0) {
       throw HTTPCacheAccessException("Failed to surface one of the cache directory entries.");
-    if (result == NULL) break;
-    cachedEntryName = entry.d_name;
+    }
+    if (entry == NULL) break;
+    cachedEntryName = entry->d_name;
     if (cachedEntryName != "." && cachedEntryName != "..") break;
   }
 
@@ -215,13 +219,15 @@ void HTTPCache::ensureDirectoryExists(const string& directory, bool empty) const
   if (dir == NULL) throw HTTPCacheAccessException("Cache directory exists, but we don't "
                                                   "have permission to open it to clear its entries.");
   while (true) {
-    struct dirent entry, *result;
-    if (readdir_r(dir, &entry, &result) != 0)
+    errno = 0;
+    struct dirent *entry = readdir(dir);
+    if (errno != 0) {
       throw HTTPCacheAccessException("Failed to surface one of the cache directory entries.");
-    if (result == NULL) break;
-    string dirEntry = entry.d_name;
+    }
+    if (entry == NULL) break;
+    string dirEntry = entry->d_name;
     if (dirEntry == "." || dirEntry == "..") continue;
-    dirEntry = directory + "/" + dirEntry;
+    dirEntry = string(directory).append("/").append(dirEntry);
     if (lstat(dirEntry.c_str(), &st) != 0)
       throw HTTPCacheConfigException(string("Cache is malformed... manually delete ") + dirEntry + " " + strerror(errno));
     if (S_ISDIR(st.st_mode))
@@ -269,7 +275,8 @@ void HTTPCache::extractCreateAndExpireTimes(const string& cachedFileName, time_t
 }
 
 bool HTTPCache::cachedEntryIsValid(const string& cachedFileName) const {
-  time_t createTime, expirationTime;
+  time_t createTime;
+  time_t expirationTime;
   extractCreateAndExpireTimes(cachedFileName, createTime, expirationTime);
   if (maxAge > 0) expirationTime = min<long>(createTime + maxAge, expirationTime);
   cout << oslock << "     [Cache entry created at " << createTime << ", expires at " << expirationTime << ".]" << endl << osunlock;  
@@ -284,3 +291,8 @@ string HTTPCache::getHostname() const {
     throw HTTPCacheConfigException("Could not determine the name of your machine.");
   return name;
 }
+
+std::mutex& HTTPCache::findMutexFromHash(const HTTPRequest& request) {
+  size_t requestHashIx = hashRequest(request) % kNumMutex;
+  return cacheMutexArray[requestHashIx];
+} 

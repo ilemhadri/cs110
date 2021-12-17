@@ -18,6 +18,43 @@
 #include "header.h"
 #include "payload.h"
 
+enum class HTTPStatus {
+  Continue = 100,
+  SwitchingProtocols = 101,
+  OK = 200,
+  Created = 201,
+  Accepted = 202,
+  NonAuthoritativeInformation = 203,
+  NoContent = 204,
+  ResetContent = 205,
+  PartialContent = 206,
+  MultipleChoices = 300,
+  PermanentlyMoved = 301,
+  Found = 302,
+  SeeOther = 303,
+  NotModified = 304,
+  UseProxy = 305,
+  TemporaryRedirect = 307,
+  BadRequest = 400,
+  Unauthorized = 401,
+  PaymentRequired = 402,
+  Forbidden = 403,
+  NotFound = 404,
+  MethodNotAllowed = 405,
+  NotAcceptable = 406,
+  ProxyAuthenticationRequired = 407,
+  RequestTimeout = 408,
+  Conflict = 409,
+  Gone = 410,
+  InternalServerError = 500,
+  NotImplemented = 501,
+  BadGateway = 502,
+  GatewayTimeout = 504,
+  HTTPVersionNotSupported = 505,
+  GeneralProxyFailure = 510,
+  UnknownStatus,
+};
+
 class HTTPResponse {
 
 /**
@@ -64,13 +101,14 @@ class HTTPResponse {
    */
 
   void setResponseCode(int code);
+  void setResponseCode(HTTPStatus code);
 
   /**
    * Retrieves the response code associated with the
    * HTTPResponse.
    */
 
-  int getResponseCode() const { return code; }
+  HTTPStatus getResponseCode() const;
 
   /**
    * Adds the specified key-value pair to the response
@@ -108,7 +146,8 @@ class HTTPResponse {
   HTTPHeader responseHeader;
   HTTPPayload payload;
   
-  std::string getStatusMessage(int code) const;
+  static const std::map<HTTPStatus, std::string> kStatusMessages;
+  std::string getStatusMessage() const;
 };
 
 #endif

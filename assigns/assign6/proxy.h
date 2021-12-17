@@ -23,7 +23,7 @@ class HTTPProxy {
  * specified port.  If the specified port is in use, or the HTTP Proxy
  * server otherwise can't bind to it, then an exception is thrown.
  */
-  HTTPProxy(int argc, char *argv[]) throw (HTTPProxyException);
+  HTTPProxy(int argc, char *argv[]);
 
 /**
  * Returns the port number our proxy is listening to.
@@ -55,16 +55,18 @@ class HTTPProxy {
   unsigned short getProxyPortNumber() const { return proxyPortNumber; }
 
 /**
- * Waits for an HTTP request to come in, and does whatever it takes
- * to handle it.  Because acceptAndProxyRequest is assumed to be
- * called to handle a single request as opposed to all of them, we
- * assume any and all exceptions thrown within are just for that request,
- * so we further assume exceptions are handled internally and not
- * thrown.
+ * In an infinite loop, waits for an HTTP request to come in, and does whatever
+ * it takes to handle it.
  */
-  void acceptAndProxyRequest() throw(HTTPProxyException);
+  void runServer();
+
+/**
+ * Stop handling requests; break out of runServer
+ */
+  void stopServer();
   
  private:
+  std::atomic<bool> isRunning = true;
   unsigned short portNumber;
   bool usingProxy;
   bool usingSpecificProxyPortNumber;
@@ -74,7 +76,7 @@ class HTTPProxy {
   HTTPProxyScheduler scheduler;
   
   /* private methods */
-  void configureFromArgumentList(int argc, char *argv[]) throw (HTTPProxyException);
+  void configureFromArgumentList(int argc, char *argv[]);
   void createServerSocket();
   void configureServerSocket() const;
 };

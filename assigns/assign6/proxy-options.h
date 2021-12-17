@@ -45,7 +45,7 @@ unsigned short computeDefaultPortForUser();
  * short.  If there are any problems at all with the supplied portArgument,
  * an HTTPProxyException is thrown.
  */
-unsigned short extractPortNumber(const char *portArgument, const char *flags) throw (HTTPProxyException);
+unsigned short extractPortNumber(const char *portArgument, const char *flags);
 
 /**
  * Function: extractProxyServer
@@ -54,7 +54,7 @@ unsigned short extractPortNumber(const char *portArgument, const char *flags) th
  * neither NULL nor the empty string.  Everything else is considered legitimate
  * and converted to a C++ string before returning it.
  */
-std::string extractProxyServer(const char *proxyArgument) throw (HTTPProxyException);
+std::string extractProxyServer(const char *proxyArgument);
 
 /**
  * Function: extractLongInRange
@@ -63,4 +63,4 @@ std::string extractProxyServer(const char *proxyArgument) throw (HTTPProxyExcept
  * long integer and returns it.  If there are any problems (number doesn't
  * fit in a long, string isn't purely numeric), then an HTTPProxyException is thrown.
  */
-long extractLongInRange(const char *str, long min, long max, const char *flags) throw (HTTPProxyException);
+long extractLongInRange(const char *str, long min, long max, const char *flags);
