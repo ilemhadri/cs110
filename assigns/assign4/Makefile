@@ -1,17 +1,23 @@
 # CS110 Assignment 4 Makefile
+
+# Compile parallel jobs by default. Especially with ASan, there are a lot of
+# files.
+MAKEFLAGS := --jobs=$(shell nproc) --output-sync=target
+
 PROGS = stsh
 EXTRA_PROGS = spin split int tstp fpe conduit
-CXX = g++
+PROGS_ASAN = $(patsubst %,%_asan,$(PROGS))
+CXX = clang++-10
 
-LIB_SRC = stsh-signal.cc stsh-job-list.cc stsh-job.cc stsh-process.cc stsh-parse-utils.cc \
+LIB_SRC = stsh-job-list.cc stsh-job.cc stsh-process.cc stsh-parse-utils.cc \
           stsh-parser/scanner.cc stsh-parser/parser.cc stsh-parser/stsh-parse.cc stsh-parser/stsh-readline.cc
 
-WARNINGS = -Wall -pedantic -Wno-unused-function -Wno-vla -Wno-sign-compare
+WARNINGS = -Wall -pedantic -Wno-unused-function -Wno-vla-extension -Wno-sign-compare
 DEPS = -MMD -MF $(@:.o=.d)
-DEFINES = 
+DEFINES =
 INCLUDES = -I/afs/ir/class/cs110/local/include
 
-CXXFLAGS = -g $(WARNINGS) -O0 -std=c++0x $(DEFINES) $(INCLUDES)
+CXXFLAGS = -g -fno-limit-debug-info $(WARNINGS) -O0 -std=c++20 $(DEFINES) $(INCLUDES)
 LDFLAGS = -lreadline -ll
 
 LIB_OBJ = $(patsubst %.cc,%.o,$(patsubst %.S,%.o,$(LIB_SRC)))
@@ -26,13 +32,17 @@ EXTRA_PROGS_SRC = $(patsubst %,%.cc,$(EXTRA_PROGS))
 EXTRA_PROGS_OBJ = $(patsubst %.cc,%.o,$(patsubst %.S,%.o,$(EXTRA_PROGS_SRC)))
 EXTRA_PROGS_DEP = $(patsubst %.o,%.d,$(EXTRA_PROGS_OBJ))
 
-default: $(PROGS) $(EXTRA_PROGS)
+PROGS_ASAN_OBJ = $(patsubst %.o,%_asan.o,$(PROGS_OBJ) $(LIB_OBJ))
+PROGS_ASAN_DEP = $(patsubst %.o,%.d,$(PROGS_ASAN_OBJ))
 
-stsh-parser/parser.cc stsh-parser/scanner.cc:
-	make -C stsh-parser
+all: $(PROGS) $(EXTRA_PROGS) $(PROGS_ASAN)
 
-stsh-parser/parser.o: stsh-parser/parser.cc
-stsh-parser/scanner.o: stsh-parser/scanner.cc
+stsh-parser/scanner.cc stsh-parser/parser.cc stsh-parser/stsh-parse.cc stsh-parser/stsh-readline.cc: stsh-parser-build
+stsh-parser-build:
+	$(MAKE) -C stsh-parser
+
+stsh-parser/parser.o: stsh-parser-build stsh-parser/parser.cc
+stsh-parser/scanner.o: stsh-parser-build stsh-parser/scanner.cc
 
 stsh: %:%.o $(LIB)
 	$(CXX) $^ $(LDFLAGS) -o $@
@@ -45,17 +55,27 @@ $(LIB): $(LIB_OBJ)
 $(EXTRA_PROGS): %:%.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
+$(PROGS_ASAN_OBJ): %_asan.o:%.cc
+	$(CXX) $(CXXFLAGS) -fsanitize=address -c -o $@ $<
+$(PROGS_ASAN): $(PROGS_ASAN_OBJ)
+	$(CXX) $^ $(LDFLAGS) -o $@ -fsanitize=address
+
+tidy::
+	$(info "Checking style for $(PROGS_SRC)...")
+	clang-tidy $(PROGS_SRC)
+
 clean::
-	make -C stsh-parser clean
+	$(MAKE) -C stsh-parser clean
 	rm -f $(PROGS) $(PROGS_OBJ) $(PROGS_DEP)
 	rm -f $(EXTRA_PROGS) $(EXTRA_PROGS_OBJ) $(EXTRA_PROGS_DEP)
+	rm -f $(PROGS_ASAN) $(PROGS_ASAN_OBJ) $(PROGS_ASAN_DEP)
 	rm -f $(LIB) $(LIB_DEP) $(LIB_OBJ)
 
 spartan:: clean
-	make -C stsh-parser spartan
+	$(MAKE) -C stsh-parser spartan
 	\rm -fr *~
 
 .PHONY: all clean spartan
 
--include $(LIB_DEP) $(PROGS_DEP) $(EXTRA_PROG_DEP)
+-include $(LIB_DEP) $(PROGS_DEP) $(EXTRA_PROG_DEP) $(PROGS_ASAN_DEP)
 

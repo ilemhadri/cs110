@@ -289,6 +289,7 @@ void STSHShell::createJob(const pipeline& p){
 	       if (fd_input == -1) throw STSHException("Could not open file for input redirection");
                dup2(fd_input, STDIN_FILENO);
 	    }
+            close(fdsArr[0][0]);
 	  }
 	  else setpgid(pids[i], pids[0]);
 
@@ -303,6 +304,7 @@ void STSHShell::createJob(const pipeline& p){
 	      // close unnecessary fds
 	      close(fdsArr[i-1][1]);
 	  }
+
 	  if (i < p.commands.size()-1){
             dup2(fdsArr[i][1], STDOUT_FILENO);
           }

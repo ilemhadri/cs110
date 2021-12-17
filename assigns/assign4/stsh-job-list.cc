@@ -95,7 +95,7 @@ void STSHJobList::synchronize(STSHJob& job) {
 }
 
 ostream& operator<<(ostream& os, const STSHJobList& joblist) {
-  for (const pair<size_t, STSHJob>& p: joblist.jobs) 
+  for (const pair<const size_t, STSHJob>& p: joblist.jobs) 
     os << p.second << endl;
   return os;
 }

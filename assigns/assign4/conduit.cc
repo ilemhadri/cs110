@@ -44,7 +44,6 @@ static void extractArguments(int argc, char *argv[], size_t& delay, size_t& coun
   if (argc > 0) printUsage("Too many arguments.", argv[0]);
 }
 
-static const int kArgumentNotRecognized = 1;
 int main(int argc, char *argv[]) {
   size_t delay = 0, count = 1; 
   extractArguments(argc, argv, delay, count);

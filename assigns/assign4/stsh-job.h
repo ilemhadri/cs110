@@ -8,6 +8,7 @@
  *     static STSHJob createJob(size_t num, const vector<STSHProcess>& processes) {
  *       STSHJob job(num, kBackground);
  *       for (const STSHProcess& process: processes) job.addProcess(process);
+ *       return job;
  *     }
  *
  * In practice, STSHJobs are constructed by the JobList, which
