@@ -27,8 +27,8 @@ class RSSIndex {
   void add(const Article& article, const std::vector<std::string>& words);
 
 /**
- * Returns a reference to the list of documents associated with the specified
- * word.  The list is a vector of URL/frequency pairs, sorted by frequency from
+ * Returns a list (as a vector) of documents associated with the specified
+ * word. The list is a vector of URL/frequency pairs, sorted by frequency from
  * high to low (and alphabetically for those with the same frequence counts.)
  */
   std::vector<std::pair<Article, int> > getMatchingArticles(const std::string& word) const;

@@ -32,7 +32,7 @@ class RSSFeed {
  *
  * If any problems are encountered, and RSSFeedException is thrown.
  */
-  void parse() throw (RSSFeedException);
+  void parse();
 
 /**
  * Method: getArticles
@@ -47,8 +47,8 @@ class RSSFeed {
   std::string url;
   std::vector<Article> articles;
   
-  std::string download(size_t numRedirectsAllowed = 10) throw (RSSFeedException);
-  void parse(const std::string& contents) throw (RSSFeedException);
+  std::string download(size_t numRedirectsAllowed = 10);
+  void parse(const std::string& contents);
 
   /**
    * The following two lines delete the default implementations you'd

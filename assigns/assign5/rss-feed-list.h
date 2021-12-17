@@ -50,8 +50,8 @@ class RSSFeedList {
  *
  * If any problems are encountered, an RSSFeedListException is thrown.
  */
-  void parse() throw (RSSFeedListException);
-
+  void parse();
+  
 /**
  * Method: getFeeds
  * Usage: const auto& feeds = list.getFeeds();

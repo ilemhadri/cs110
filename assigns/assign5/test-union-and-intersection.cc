@@ -18,11 +18,13 @@ using namespace std;
 
 static void printList(const string& header, const vector<string>& words) {
   cout << header << ":";
-  if (words.empty())
+  if (words.empty()) {
     cout << " [nothing to print]";
-  else
-    for (const string& word: words)
+  } else {
+    for (const string& word : words) {
       cout << " " << word;
+    }
+  }
   cout << endl;
 }
 

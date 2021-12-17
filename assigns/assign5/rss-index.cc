@@ -23,7 +23,7 @@ vector<pair<Article, int> > RSSIndex::getMatchingArticles(const string& word) co
   if (indexFound == index.end()) return emptyResult;
   const map<Article, int>& matches = indexFound->second;
   vector<pair<Article, int> > v;
-  for (const pair<Article, int>& match: matches) v.push_back(match);
+  for (const pair<const Article, int>& match: matches) v.push_back(match);
   sort(v.begin(), v.end(), [](const pair<Article, int>& one, 
                               const pair<Article, int>& two) {
     return one.second > two.second || (one.second == two.second && one.first < two.first);

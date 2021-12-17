@@ -22,7 +22,7 @@ class HTMLDocument {
  * -------------------------
  * Constructs an HTMLDocument instance around the specified URL.
  */
-  HTMLDocument(const std::string& url) : url(url) {}
+  HTMLDocument(const std::string& url) : url(url), urlNormalized(normalize(url)) {}
 
 /**
  * Method: parse
@@ -34,7 +34,7 @@ class HTMLDocument {
  *
  * If any problems are encountered, an HTMLDocumentException is thrown.
  */
-  void parse() throw (HTMLDocumentException);
+  void parse();
 
 /**
  * Method: getURL
@@ -55,12 +55,14 @@ class HTMLDocument {
   
  private:
   std::string url;
+  std::string urlNormalized;
   std::vector<std::string> tokens;
 
-  std::string download(size_t numRedirectsAllowed = 10) throw (HTMLDocumentException);
-  void parse(const std::string& contents) throw (HTMLDocumentException);
-  void extractTokens(struct myhtml_tree *tree) throw (HTMLDocumentException);
-  void removeNodes(struct myhtml_tree *tree, const std::string& tagName) throw (HTMLDocumentException);
+  std::string download(size_t numRedirectsAllowed = 10);
+  void parse(const std::string& contents);
+  void extractTokens(struct myhtml_tree *tree);
+  void removeNodes(struct myhtml_tree *tree, const std::string& tagName);
+  static std::string normalize(const std::string& url);
   
 /**
  * The following two lines delete the default implementations you'd

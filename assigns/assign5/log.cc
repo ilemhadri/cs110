@@ -42,9 +42,14 @@ void NewsAggregatorLog::noteSingleFeedDownloadSkipped(const string& feedURI) con
   cout << oslock << "Skipped entire download of feed URI: " << feedURI << endl << osunlock;
 }
 
-void NewsAggregatorLog::noteSingleFeedDownloadEnd(const string& feedURI) const {
+void NewsAggregatorLog::noteAllArticlesHaveBeenScheduledForFeed(const string& feedURI) const {
   if (!verbose) return;
-  cout << oslock << "End full download of feed URI: " << feedURI << endl << osunlock;
+  cout << oslock << "All articles have been scheduled for feed URI: " << feedURI << endl << osunlock;
+}
+
+void NewsAggregatorLog::noteAllFeedsHaveBeenScheduledForFeedList(const string& rssFeedListURI) const {
+  if (!verbose) return;
+  cout << oslock << "All feeds have been scheduled for RSS feed list from: " << rssFeedListURI << endl << osunlock;
 }
 
 void NewsAggregatorLog::noteSingleFeedDownloadFailure(const string& feedURI) const {
@@ -80,9 +85,4 @@ void NewsAggregatorLog::noteSingleArticleDownloadFailure(const Article& article)
   cerr << oslock;
   cerr << "Ran into trouble while pulling HTML document from \"" << article.url << "\" Ignoring...." << endl;
   cerr << osunlock;
-}
-
-void NewsAggregatorLog::noteAllArticlesHaveBeenScheduled(const string& feedTitle) const {
-  if (!verbose) return;
-  cout << oslock << feedTitle << ": All articles have been scheduled." << endl << osunlock;
 }

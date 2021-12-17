@@ -13,8 +13,8 @@
  * Function: getURLServer
  * ----------------------
  * Given a bona fide URL server string (e.g. 
- * "http://cs110.stanford.edu", or "https://graph.facebook.com/jerry"), 
- * return just the server portion of the URL (e.g. "cs110.stanfod.edu", 
+ * "http://cs110.stanford.edu", or "https://graph.facebook.com/user"), 
+ * return just the server portion of the URL (e.g. "cs110.stanford.edu", 
  * or "graph.facebook.com").
  */
 std::string getURLServer(const std::string& url);
