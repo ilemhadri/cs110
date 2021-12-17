@@ -13,6 +13,8 @@
 #include "mapreduce-reducer.h"
 using namespace std;
 
+const string kGroupByKeyExecutable = "/usr/class/cs110/samples/assign7/group-by-key.py";
+
 MapReduceReducer::MapReduceReducer(const string& serverHost, unsigned short serverPort,
                                    const string& cwd, const string& executable, const string& outputPath) : 
   MapReduceWorker(serverHost, serverPort, cwd, executable, outputPath) {}

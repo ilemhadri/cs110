@@ -13,9 +13,9 @@
 
 class MapReduceServerException: public std::exception {
  public:
-  MapReduceServerException(const std::string& message) throw() : message(message) {}
-  ~MapReduceServerException() throw() {}
-  const char *what() const throw() { return message.c_str(); }
+  MapReduceServerException(const std::string& message) noexcept : message(message) {}
+  ~MapReduceServerException() noexcept {}
+  const char *what() const noexcept { return message.c_str(); }
   
  private:
   const std::string message;

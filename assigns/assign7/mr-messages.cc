@@ -40,8 +40,8 @@ void sendWorkerReady(ostream& outstream) {
   outstream << messageToStringMap[kWorkerReady] << endl; 
 }
 
-void sendJobStart(ostream& outstream, const string& chunkFile) { 
-  outstream << messageToStringMap[kJobStart] << " " << chunkFile << endl; 
+void sendJobStart(ostream& outstream, const string& filePattern) { 
+  outstream << messageToStringMap[kJobStart] << " " << filePattern << endl; 
 }
 
 void sendJobInfo(ostream& outstream, const string& info) {
@@ -49,12 +49,12 @@ void sendJobInfo(ostream& outstream, const string& info) {
             << getHost() << ": " << info << endl;
 }
 
-void sendJobSucceeded(ostream& outstream, const string& chunkFile) { 
-  outstream << messageToStringMap[kJobSucceeded] << " " << chunkFile << endl;
+void sendJobSucceeded(ostream& outstream, const string& filePattern) { 
+  outstream << messageToStringMap[kJobSucceeded] << " " << filePattern << endl;
 }
 
-void sendJobFailed(ostream& outstream, const string& chunkFile) { 
-  outstream << messageToStringMap[kJobFailed] << " " << chunkFile << endl;
+void sendJobFailed(ostream& outstream, const string& filePattern) { 
+  outstream << messageToStringMap[kJobFailed] << " " << filePattern << endl;
 }
 
 void sendServerDone(ostream& outstream) {

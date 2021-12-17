@@ -16,9 +16,11 @@ using namespace std;
  * -----------------
  * Returns the SUNet ID of the logged in user.
  */
-string getUser() throw (MapReduceServerException) {
-  struct passwd pw, *result = NULL;
-  char buf[100000]; // huge space that will generally be large enough
+const size_t kPasswdBufSize = 100000; // huge space that will generally be large enough
+string getUser() noexcept(false) {
+  struct passwd pw;
+  struct passwd *result = NULL;
+  char buf[kPasswdBufSize];
   getpwuid_r(getuid(), &pw, buf, sizeof(buf), &result); // getuid can't fail, getpwuid_r is reentrant
   if (result == NULL) 
     throw MapReduceServerException("Could not determine your SUNetID.");
@@ -31,7 +33,7 @@ string getUser() throw (MapReduceServerException) {
  * Returns the hostname where the server is running (e.g. "myth55",
  * but without the ".stanford.edu".
  */
-string getHost() throw (MapReduceServerException) {
+string getHost() noexcept(false) {
   char name[HOST_NAME_MAX + 1];
   if (gethostname(name, HOST_NAME_MAX + 1) == -1) // function is thread safe
     throw MapReduceServerException("Could not determine the name of the host machine.");
@@ -43,7 +45,7 @@ string getHost() throw (MapReduceServerException) {
  * ------------------------------------
  * Returns the current working directory.
  */
-string getCurrentWorkingDirectory() throw (MapReduceServerException) {
+string getCurrentWorkingDirectory() noexcept(false) {
   char cwd[PATH_MAX + 1];
   if (getcwd(cwd, PATH_MAX + 1) == NULL) // function is thread safe
     throw MapReduceServerException("Could not determine your current working directory.");

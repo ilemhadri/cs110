@@ -17,7 +17,7 @@
  * MapReduceServerException is thrown in the rare case where the
  * SUNet ID can't be determined.
  */
-std::string getUser() throw (MapReduceServerException);
+std::string getUser() noexcept(false);
 
 /**
  * Function: getHost
@@ -26,7 +26,7 @@ std::string getUser() throw (MapReduceServerException);
  * MapReduceServerException is thrown in the rare case where the
  * hostname can't be determined.
  */
-std::string getHost() throw (MapReduceServerException);
+std::string getHost() noexcept(false);
 
 /**
  * Function: getCurrentWorkingDirectory
@@ -35,4 +35,4 @@ std::string getHost() throw (MapReduceServerException);
  * MapReduceServerException is thrown in the rare case where the
  * current working directory can't be determined.
  */
-std::string getCurrentWorkingDirectory() throw (MapReduceServerException);
+std::string getCurrentWorkingDirectory() noexcept(false);

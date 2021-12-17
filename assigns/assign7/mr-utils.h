@@ -17,7 +17,7 @@
  * In a nutshell, it relies on strtol to convert a string to a number, and it confirms that
  * the string was purely numeric and that the number is a legitimate port number.
  */
-unsigned short extractPortNumber(const char *portArgument) throw (MapReduceServerException);
+unsigned short extractPortNumber(const char *portArgument) noexcept(false);
 
 /**
  * Function: parseNumberInRange
@@ -27,7 +27,7 @@ unsigned short extractPortNumber(const char *portArgument) throw (MapReduceServe
  * then a MapReduceServerException is thrown around an actionable error message.
  */
 size_t parseNumberInRange(const std::string& key, const std::string& value,
-                          size_t low, size_t high) throw (MapReduceServerException);
+                          size_t low, size_t high) noexcept(false);
 
 /**
  * Function: ensureDirectoryExists
@@ -38,4 +38,4 @@ size_t parseNumberInRange(const std::string& key, const std::string& value,
  * workers.
  */
 std::string ensureDirectoryExists(const std::string& key, const std::string& path, 
-                                  const std::string& cwd) throw (MapReduceServerException);
+                                  const std::string& cwd) noexcept(false);

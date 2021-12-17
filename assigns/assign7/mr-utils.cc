@@ -12,7 +12,7 @@
 #include <unistd.h>              // for stat
 using namespace std;
 
-unsigned short extractPortNumber(const char *portArgument) throw (MapReduceServerException) {
+unsigned short extractPortNumber(const char *portArgument) noexcept(false) {
   char *endptr;
   long rawPort = strtol(portArgument, &endptr, 0);
   if (*endptr != '\0') {
@@ -30,7 +30,7 @@ unsigned short extractPortNumber(const char *portArgument) throw (MapReduceServe
   return static_cast<unsigned short>(rawPort);
 }
 
-size_t parseNumberInRange(const string& key, const string& value, size_t low, size_t high) throw (MapReduceServerException) {
+size_t parseNumberInRange(const string& key, const string& value, size_t low, size_t high) noexcept(false) {
   char *endptr;
   long number = strtol(value.c_str(), &endptr, 0);
   if (*endptr != '\0') {
@@ -59,7 +59,7 @@ size_t parseNumberInRange(const string& key, const string& value, size_t low, si
  * because these paths needs to be passed across the network between the server and the
  * workers.
  */
-string ensureDirectoryExists(const string& key, const string& path, const string& cwd) throw (MapReduceServerException) {
+string ensureDirectoryExists(const string& key, const string& path, const string& cwd) noexcept(false) {
   string absolutePath = path;
   if (!path.empty() && path[0] != '/') {
     ostringstream oss;
@@ -77,7 +77,7 @@ string ensureDirectoryExists(const string& key, const string& path, const string
     throw MapReduceServerException(oss.str());
   }
 
-  if (!(st.st_mode & S_IFDIR)) {
+  if ((st.st_mode & S_IFDIR) == 0) {
     ostringstream oss;
     oss << "The configuration file's \"" << key << "\" entry identifies a path" << endl
         << "of \"" << path << "\" that isn't a directory.";

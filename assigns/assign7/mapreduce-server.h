@@ -11,7 +11,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <list>
+#include <queue>
 #include <set>
 #include <vector>
 #include <map>
@@ -19,37 +19,37 @@
 
 class MapReduceServer {
  public:
-  MapReduceServer(int argc, char **argv) throw (MapReduceServerException);
-  ~MapReduceServer() throw();
-  void run() throw();
+  MapReduceServer(int argc, char **argv);
+  ~MapReduceServer() noexcept;
+  void run() noexcept;
   
  private:
-  unsigned short computeDefaultPortForUser() const throw ();
-  void parseArgumentList(int argc, char *argv[]) throw (MapReduceServerException);
-  void initializeFromConfigFile(const std::string& configFileName) throw (MapReduceServerException);
-  void confirmRequiredArgumentsArePresent(const std::string& configFilename) const throw (MapReduceServerException);
-  void confirmExecutablesAreExecutable() const throw (MapReduceServerException);
-  void applyToServer(const std::string& key, const std::string& value) throw (MapReduceServerException);
-  void buildIPAddressMap() throw();
-  void stageFiles(const std::string& directory, std::list<std::string>& files) throw();
-  void startServer() throw (MapReduceServerException);
-  void logServerConfiguration(std::ostream& os) throw();
-  void orchestrateWorkers() throw();
-  void handleRequest(int clientSocket, const std::string& clientIPAddress) throw();
-  void spawnMappers() throw();
-  void spawnWorker(const std::string& node, const std::string& command) throw();
+  unsigned short computeDefaultPortForUser() const noexcept;
+  void parseArgumentList(int argc, char *argv[]) noexcept(false);
+  void initializeFromConfigFile(const std::string& configFileName) noexcept(false);
+  void confirmRequiredArgumentsArePresent(const std::string& configFilename) const noexcept(false);
+  void confirmExecutablesAreExecutable() const noexcept(false);
+  void applyToServer(const std::string& key, const std::string& value) noexcept(false);
+  void buildIPAddressMap() noexcept;
+  std::vector<std::string> listFiles(const std::string& directory) const noexcept;
+  void startServer() noexcept(false);
+  void logServerConfiguration(std::ostream& os) noexcept;
+  void orchestrateWorkers() noexcept;
+  void handleRequest(int clientSocket, const std::string& clientIPAddress) noexcept;
+  void spawnMappers() noexcept;
+  void spawnWorker(const std::string& node, const std::string& command) const noexcept;
 
   std::string buildMapperCommand(const std::string& remoteHost,
                                  const std::string& executable, 
-                                 const std::string& outputPath) throw();
+                                 const std::string& outputPath) noexcept;
                                   
-  bool surfaceNextFilePattern(std::string& pattern) throw();
-  void markFilePatternAsProcessed(const std::string& clientIPAddress, const std::string& pattern) throw();
-  void rescheduleFilePattern(const std::string& clientIPAddress, const std::string& pattern) throw();
+  bool getNextFilePattern(std::string& pattern) noexcept;
+  void markFilePatternAsProcessed(const std::string& clientIPAddress, const std::string& pattern) noexcept;
+  void rescheduleFilePattern(const std::string& clientIPAddress, const std::string& pattern) noexcept;
 
-  void dumpFileHashes(const std::string& dir) throw();
-  void dumpFileHash(const std::string& file) throw();
-  void bringDownServer() throw();
+  void dumpFileHashes(const std::string& dir) noexcept;
+  void dumpFileHash(const std::string& file) noexcept;
+  void bringDownServer() noexcept;
 
   std::string user;
   std::string host;
@@ -70,10 +70,10 @@ class MapReduceServer {
   
   std::vector<std::string> nodes;
   std::map<std::string, std::string> ipAddressMap;
-  bool serverIsRunning; // only manipulated in constructor and in server thread, so no lock needed
+  std::atomic<bool> serverIsRunning;
   std::thread serverThread;
   
-  std::list<std::string> unprocessed;
+  std::queue<std::string> unprocessed;
   std::set<std::string> inflight;
   
   MapReduceServer(const MapReduceServer& original) = delete;

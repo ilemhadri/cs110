@@ -54,7 +54,7 @@ vector<string> loadMapReduceNodes() {
   vector<string> nodes;
   mutex m;
   vector<thread> threads;
-  for (size_t num = kMinMythNum; num <= kMaxMythNum; num++) threads.push_back(thread(pollMyth, num, ref(exclude), ref(nodes), ref(m)));
+  for (size_t num = kMinMythNum; num <= kMaxMythNum; num++) threads.emplace_back(thread(pollMyth, num, ref(exclude), ref(nodes), ref(m)));
   for (thread& t: threads) t.join();
   return nodes;
 }
