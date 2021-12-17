@@ -36,9 +36,8 @@ static void printSystemCallData(const map<int, string>& systemCallNumbers, const
 
 int main(int argc, char *argv[]) {
   map<int, string> systemCallNumbers;
-  map<string, int> systemCallNames;
   map<string, systemCallSignature> systemCallSignatures;
-  compileSystemCallData(systemCallNumbers, systemCallNames, systemCallSignatures, /* rebuild = */ true);
+  compileSystemCallData(systemCallNumbers, systemCallSignatures, /* rebuild = */ true);
   printSystemCallData(systemCallNumbers, systemCallSignatures);
   return 0;
 }

@@ -15,4 +15,4 @@
 #pragma once
 #include "trace-exception.h"
 
-size_t processCommandLineFlags(bool& simple, bool& rebuild, char *argv[]) throw (TraceException);
+size_t processCommandLineFlags(bool& simple, bool& rebuild, char *argv[]);

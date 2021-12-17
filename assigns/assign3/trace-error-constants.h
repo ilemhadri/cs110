@@ -10,5 +10,5 @@
 #include <string>
 #include "trace-exception.h"
  
-void compileSystemCallErrorStrings(std::map<int, std::string>& errorConstants) throw (MissingFileException);
+void compileSystemCallErrorStrings(std::map<int, std::string>& errorConstants);
  

@@ -77,7 +77,7 @@ static void processLine(map<int, string>& errorConstants, const string& line) {
  * Crawls over the files listed in kErrorHeaderFilenames and populates the
  * supplied map with all of the errno #define constants (like ENOENT, ECHILD, EACCES, etc).
  */
-void compileSystemCallErrorStrings(map<int, string>& errorConstants) throw (MissingFileException) {
+void compileSystemCallErrorStrings(map<int, string>& errorConstants) {
   for (const string& name: kErrorHeaderFilenames) {
     ifstream infile(name);
     if (infile.fail()) 

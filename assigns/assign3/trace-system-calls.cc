@@ -355,7 +355,7 @@ static const string kKernelSourceCodeDirectory = "/usr/class/cs110/local/src/lin
 static const char *const kKernelSourceFileFinderCommand[] = {"find", kKernelSourceCodeDirectory.c_str(), "-name", "*.c", "-print", NULL};
 static void collectSystemCallSignatures(map<string, systemCallSignature>& systemCallSignatures, const map<string, int>& systemCallNames, bool rebuild) {
   if (!rebuild && loadSignaturesFromCache(systemCallSignatures)) return;
-  subprocess_t sp = subprocess(const_cast<char **>(kKernelSourceFileFinderCommand), 
+  subprocess_t sp = subprocess(kKernelSourceFileFinderCommand, 
                                /* supplyChildInput = */ false, 
                                /* ingestChildOutput = */ true);
   cout << "Extracting system call signature information from " << kKernelSourceCodeDirectory << "..." << endl;
@@ -367,16 +367,53 @@ static void collectSystemCallSignatures(map<string, systemCallSignature>& system
 }
 
 /**
- * Function: compileSystemCallData
+ * Function: compileSystemCallDataIncludingNames
  * -------------------------------
- * Populates the supplied maps with information about system call numbers, names, and signatures.
- * The implementation just passes the buck on to two helper functions.
+ * Initialize the three provided maps with information about system call names, their corresponding numbers,
+ * and signatures.  All three parameters are expected to reference allocated but otherwise empty maps.  To illustrate, assume
+ * that there are just four system calls with the following signatures:
+ *
+ *      int open(const char *, int flags, int mode);              // system call number 1
+ *      ssize_t read(int fd, void *buffer, size_t size);          // system call number 2
+ *      ssize_t write(int fd, const void *buffer, size_t size);   // system call number 3
+ *      int close(int fd);                                        // system call number 4
+ *
+ * On return, the three maps would contain the following key/value pairs:
+ *
+ *       systemCallNumbers: 1 -> "open",
+ *                          2 -> "read",
+ *                          3 -> "write",
+ *                          4 -> "close"
+ *       systemCallNames: "open" -> 1,
+ *                        "read" -> 2,
+ *                        "write" -> 3,
+ *                        "close" -> 4
+ *       systemCallSignatures: "open" -> [SYSCALL_STRING, SYSCALL_INTEGER, SYSCALL_INTEGER],
+ *                             "read" -> [SYSCALL_INTEGER, SYSCALL_POINTER, SYSCALL_INTEGER],
+ *                             "write" -> [SYSCALL_INTEGER, SYSCALL_POINTER, SYSCALL_INTEGER],
+ *                             "close" -> [SYSCALL_INTEGER]
+ *
+ * The rebuild boolean, if true, is an instruction to rebuild the map of prototype information from scratch
+ * instead of relying on a cached data file.
  */
-void compileSystemCallData(map<int, string>& systemCallNumbers,
+void compileSystemCallDataIncludingNames(map<int, string>& systemCallNumbers,
                            map<std::string, int>& systemCallNames,
                            map<std::string, systemCallSignature>& systemCallSignatures, bool rebuild) {
   if (systemCallNumbers.size() + systemCallNames.size() + systemCallSignatures.size() > 0)
     throw TraceException("The maps supplied to compileSystemCallData must all be empty.");
   collectSystemCallNumbers(systemCallNumbers, systemCallNames);
   collectSystemCallSignatures(systemCallSignatures, systemCallNames, rebuild);
+}
+
+/**
+ * Function: compileSystemCallData
+ * -------------------------------
+ * Populates the supplied maps with information about system call numbers and signatures.
+ * The implementation is a wrapper around the full version that also populates a names -> numbers
+ * map, but that is not used.
+ */
+void compileSystemCallData(map<int, string>& systemCallNumbers,
+                           map<std::string, systemCallSignature>& systemCallSignatures, bool rebuild) {
+  map<std::string, int> systemCallNames;
+  compileSystemCallDataIncludingNames(systemCallNumbers, systemCallNames, systemCallSignatures, rebuild);
 }

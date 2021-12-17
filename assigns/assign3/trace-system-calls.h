@@ -52,8 +52,8 @@ typedef std::vector<scParamType> systemCallSignature;
 /**
  * Function: compileSystemCallData
  * -------------------------------
- * Initialize the three provided maps with information about system call names, their corresponding numbers,
- * and signatures.  All three parameters are expected to reference allocated but otherwise empty maps.  To illustrate, assume
+ * Initialize the two provided maps with information about system call names, their corresponding numbers,
+ * and signatures.  Both parameters are expected to reference allocated but otherwise empty maps.  To illustrate, assume
  * that there are just four system calls with the following signatures:
  *
  *      int open(const char *, int flags, int mode);              // system call number 1
@@ -61,16 +61,12 @@ typedef std::vector<scParamType> systemCallSignature;
  *      ssize_t write(int fd, const void *buffer, size_t size);   // system call number 3
  *      int close(int fd);                                        // system call number 4
  *
- * On return, the three maps would contain the following key/value pairs:
+ * On return, the two maps would contain the following key/value pairs:
  *
  *       systemCallNumbers: 1 -> "open",
  *                          2 -> "read",
  *                          3 -> "write",
  *                          4 -> "close"
- *       systemCallNames: "open" -> 1,
- *                        "read" -> 2,
- *                        "write" -> 3,
- *                        "close" -> 4
  *       systemCallSignatures: "open" -> [SYSCALL_STRING, SYSCALL_INTEGER, SYSCALL_INTEGER],
  *                             "read" -> [SYSCALL_INTEGER, SYSCALL_POINTER, SYSCALL_INTEGER],
  *                             "write" -> [SYSCALL_INTEGER, SYSCALL_POINTER, SYSCALL_INTEGER],
@@ -80,5 +76,4 @@ typedef std::vector<scParamType> systemCallSignature;
  * instead of relying on a cached data file.
  */
 void compileSystemCallData(std::map<int, std::string>& systemCallNumbers,
-                           std::map<std::string, int>& systemCallNames,
                            std::map<std::string, systemCallSignature>& systemCallSignatures, bool rebuild);

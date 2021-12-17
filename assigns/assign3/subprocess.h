@@ -4,56 +4,11 @@
  * Exports a custom data type to bundle everything needed to spawn a new process,
  * manage that process, and optionally publish to its stdin and/or read from its stdout.
  *
- * Sample program:
-   
-const string kWords[] = {"put", "a", "ring", "on", "it"};
-static void publishWordsToChild(int to) {
-  stdio_filebuf<char> outbuf(to, std::ios::out);
-  ostream os(&outbuf);
-  for (const string& word: kWords) os << word << endl;
-} // stdio_filebuf destroyed, destructor calls close on descriptor it owns
-    
-static void ingestAndPublishWords(int from) {
-  stdio_filebuf<char> inbuf(from, std::ios::in);
-  istream is(&inbuf); // manufacture an istream out of a read-only file descriptor so we can use C++ streams (prettier!)
-  while (true) {
-    string word;
-    getline(is, word);
-    if (is.fail()) break;
-    cout << word << endl;
-  }
-} // stdio_filebuf destroyed, destructor calls close on descriptor it owns
-
-static void waitForChildProcess(pid_t pid) {
-  if (waitpid(pid, NULL, 0) != pid) {
-    throw SubprocessException("Encountered a problem while waiting for subprocess's process to finish.");
-  }
-}
-
-const string kSortExecutable = "/usr/bin/sort";
-int main(int argc, char *argv[]) {
-  try {
-    char *argv[] = {const_cast<char *>(kSortExecutable.c_str()), NULL};
-    subprocess_t child = subprocess(argv, true, true);
-    publishWordsToChild(child.supplyfd);
-    ingestAndPublishWords(child.ingestfd);
-    waitForChildProcess(child.pid);
-    return 0;
-  } catch (const SubprocessException& se) {
-    cerr << "Problem encountered while spawning second process to run \"" << kSortExecutable << "\"." << endl;
-    cerr << "More details here: " << se.what() << endl;
-    return 1;
-  } catch (...) { // ... here means catch everything else
-    cerr << "Unknown internal error." << endl;
-    return 2;
-  }
-}
-
+ * See subprocess-test.cc for an example client program.
  */
 
 #pragma once
 #include <unistd.h> // for pid_t
-#include <set>      // for set, obvi
 #include "subprocess-exception.h"
 
 /**
@@ -92,5 +47,4 @@ struct subprocess_t {
  *   supplyChildInput: true if the parent process would like to pipe content to the new process's stdin, false otherwise
  *   ingestChildOutput: true if the parent would like the child's stdout to be pushed to the parent, false otheriwse
  */
-subprocess_t subprocess(char *argv[], bool supplyChildInput, bool ingestChildOutput) throw (SubprocessException);
-
+subprocess_t subprocess(const char* const *argv, bool supplyChildInput, bool ingestChildOutput);

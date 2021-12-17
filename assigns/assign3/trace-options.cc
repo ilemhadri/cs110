@@ -11,7 +11,7 @@ using namespace std;
 
 static const string kSimpleFlag = "--simple";
 static const string kRebuildFlag = "--rebuild";
-size_t processCommandLineFlags(bool& simple, bool& rebuild, char *argv[]) throw (TraceException) {  
+size_t processCommandLineFlags(bool& simple, bool& rebuild, char *argv[]) {  
   size_t numFlags = 0;
   for (int i = 1; argv[i] != NULL && startsWith(argv[i], "--"); i++) {
     if (argv[i] == kSimpleFlag) simple = true;
