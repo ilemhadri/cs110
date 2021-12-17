@@ -8,7 +8,7 @@ CXX_DEPS = -MMD -MF $(@:.o=.d)
 CXX_DEFINES =
 CXX_INCLUDES = -I/afs/ir/class/cs110/local/include
 
-CXXFLAGS = -g $(CXX_WARNINGS) -O0 -std=c++0x $(CXX_DEPS) $(CXX_DEFINES) $(CXX_INCLUDES)
+CXXFLAGS = -g -fno-limit-debug-info $(CXX_WARNINGS) -O0 -std=c++20 $(CXX_DEPS) $(CXX_DEFINES) $(CXX_INCLUDES)
 LDFLAGS = 
 
 LIB_SRC = imdb.cc path.cc
