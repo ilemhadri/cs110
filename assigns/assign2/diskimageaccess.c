@@ -177,8 +177,13 @@ static void DumpPathAndChildren(struct unixfilesystem *fs, const char *pathname,
           }
         }
 
+        // Account for d_name not having null terminator
+        char d_name[sizeof(direntries[i].d_name) + 1];
+        strncpy(d_name, direntries[i].d_name, sizeof(direntries[i].d_name));
+        d_name[sizeof(direntries[i].d_name)] = '\0';
+
         char nextpath[MAXPATH];
-        sprintf(nextpath, "%s/%s",pathname, direntries[i].d_name);
+        sprintf(nextpath, "%s/%s",pathname, d_name);
         DumpPathAndChildren(fs, nextpath,  direntries[i].d_inumber, f);
       }
   }
@@ -260,7 +265,7 @@ static void PrintUsageAndExit(char *progname) {
   fprintf(stderr, "Usage: %s <options> diskimagePath\n", progname);
   fprintf(stderr, "where <options> can be:\n");
   fprintf(stderr, "-q     don't print extra info\n"); 
-  fprintf(stderr, "-i     print all inode checksums\n"); 
-  fprintf(stderr, "-p     print all pathname checksums\n");  
+  fprintf(stderr, "-i     print all inode checksums (test the inode and file layers)\n"); 
+  fprintf(stderr, "-p     print all pathname checksums (test the filename and pathname layers)\n");  
   exit(EXIT_FAILURE);
 }
